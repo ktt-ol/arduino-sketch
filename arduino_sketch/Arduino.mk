@@ -487,7 +487,7 @@ ispload:	$(TARGET_HEX)
 clean:
 		$(REMOVE) $(OBJS) $(TARGETS) $(DEP_FILE) $(DEPS)
 
-clean_local:
+clean_ino:
 	$(REMOVE) $(LOCAL_INO_OBJS)
 
 depends:	$(DEPS)

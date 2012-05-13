@@ -1,55 +1,96 @@
+from __future__ import with_statement
 import os
 import sys
 from glob import glob
 import optparse
 import subprocess
+import ConfigParser
 
-def last_sketch(sketch):
-    last = None
-    if os.path.exists('.last_sketch'):
-        last = open('.last_sketch').read().strip()
 
-    open('.last_sketch', 'w').write(sketch)
+MAKEFILE = os.path.join(os.path.dirname(__file__), 'Arduino.mk')
+LOCAL_CONF_PATH = '.arduino_sketch'
+USER_CONF_PATH = '~/.arduino_sketch'
+INI_SECTION = 'arduino-sketch'
 
-    return last
+class DefaultValue(str):
+    pass
+
+class SketchConf(dict):
+    @classmethod
+    def from_ini(cls, ini_file, load_defaults=True):
+        conf = ConfigParser.ConfigParser()
+        conf.read(ini_file)
+        if not conf.has_section(INI_SECTION):
+            sketch_conf = cls()
+        else:
+            sketch_conf = cls(conf.items(INI_SECTION))
+
+        if load_defaults:
+            sketch_conf.fill_defaults()
+        return sketch_conf
+
+    def write_ini(self, ini_file):
+        conf = ConfigParser.ConfigParser()
+        conf.add_section(INI_SECTION)
+        for k, v in self.iteritems():
+            if not isinstance(v, DefaultValue):
+                conf.set(INI_SECTION, k, v)
+        with open(ini_file, 'w') as f:
+            conf.write(f)
+
+    def fill_defaults(self):
+        user_defaults = SketchConf.from_ini(
+            os.path.expanduser(USER_CONF_PATH), load_defaults=False)
+        for k, v in user_defaults.iteritems():
+            if k not in self:
+                self[k] = DefaultValue(v)
+        
+        for platform in [sys.platform, 'other']:
+            app_default_file = os.path.join(os.path.dirname(__file__), 'defaults_%s.ini' % platform)
+            if os.path.exists(app_default_file):
+                app_defaults = SketchConf.from_ini(
+                    app_default_file, load_defaults=False)
+                for k, v in app_defaults.iteritems():
+                    if k not in self:
+                        self[k] = DefaultValue(v)
+                break
+
 
 def list_sketches():
     for sketch in glob('*.ino'):
         print sketch[:-len('.ino')]
 
-def build(sketch, upload=False):
-    makefile = os.path.join(os.path.dirname(__file__), 'Arduino.mk')
-    if last_sketch(sketch) != sketch:
-        subprocess.call(['make', '-f', makefile, 'clean_local'])
+def clean_ino(conf):
+    subprocess.call(['make', '-f', MAKEFILE, 'clean_ino'])
 
+def list_boards(conf):
+    subprocess.call(['make', '-f', MAKEFILE, 'show_boards'])
 
-    cmd = ['make', '-f', makefile, 'all']
+def build(conf, upload=False):
+    cmd = ['make', '-f', MAKEFILE, 'all']
     if upload:
         cmd.append('upload')
     subprocess.call(cmd)
 
-makefile = os.path.join(os.path.dirname(__file__), 'Arduino.mk')
-
-def clean():
-    cmd = ['make', '-f', makefile, 'clean']
+def clean(conf):
+    cmd = ['make', '-f', MAKEFILE, 'clean']
     subprocess.call(cmd)
 
-def init_env(sketch):
-    os.environ['ARDUINO_DIR'] = '../Arduino.app/Contents/Resources/Java'
-    os.environ['SKETCH'] = sketch
-    os.environ['ARDUINO_PORT'] = '/dev/cu.usb*'
-
+def init_env(conf):
+    for k, v in conf.iteritems():
+        os.environ[k.upper()] = v
 
 def main():
     parser = optparse.OptionParser()
     parser.add_option('-l', '--list', '--list-sketches',
         dest='list_sketches', default=False, action='store_true')
-
     parser.add_option('-u', '--upload',
-        dest='upload', default=False, action='store_true')
-
+        default=False, action='store_true')
     parser.add_option('-c', '--clean',
-        dest='clean', default=False, action='store_true')
+        default=False, action='store_true')
+    parser.add_option('--list-boards',
+        default=False, action='store_true')
+    parser.add_option('--board')
 
     options, args = parser.parse_args()
 
@@ -57,20 +98,41 @@ def main():
         list_sketches()
         sys.exit(0)
 
-    if len(args) != 1:
+
+    conf = SketchConf.from_ini(LOCAL_CONF_PATH)
+
+
+    if len(args) == 1:
+        sketch = args[0]
+    elif 'sketch' in conf:
+        sketch = conf['sketch']
+    else:
         parser.print_help()
         sys.exit(1)
 
-    sketch = args[0]
     if sketch.endswith('.ino'):
         sketch = sketch[:-len('.ino')]
 
-    init_env(sketch)
+    if options.board and conf['board_tag'] != options.board:
+        conf['board_tag'] = options.board
+        options.clean = True
+
+    init_env(conf)
+
+    if options.list_boards:
+        list_boards(conf)
+        sys.exit(0)
 
     if options.clean:
-        clean()
+        clean(conf)
+    elif sketch != conf.get('sketch'):
+        # name of sketch changed, remove compiled .ino files
+        clean_ino(conf)
 
-    build(sketch, upload=options.upload)
+    build(conf, upload=options.upload)
+
+    conf['sketch'] = sketch
+    conf.write_ini(LOCAL_CONF_PATH)
 
 if __name__ == '__main__':
     main()
