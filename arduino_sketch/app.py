@@ -99,6 +99,7 @@ def clean(conf):
 def init_env(conf):
     for k, v in conf.iteritems():
         os.environ[k.upper()] = v
+    os.environ['OBJDIR'] = os.path.join(os.curdir, 'build-' + conf['board_tag'])
 
 def main():
     parser = optparse.OptionParser()
@@ -137,9 +138,8 @@ def main():
     if sketch.endswith('.ino'):
         sketch = sketch[:-len('.ino')]
 
-    if options.board and conf['board_tag'] != options.board:
+    if options.board:
         conf['board_tag'] = options.board
-        options.clean = True
 
     if options.port:
         conf['arduino_port'] = options.port

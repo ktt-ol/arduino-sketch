@@ -239,7 +239,9 @@ endif
 
 
 # Everything gets built in here
+ifndef OBJDIR
 OBJDIR  	  = build
+endif
 
 ########################################################################
 # Local sources
