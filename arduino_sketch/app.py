@@ -110,7 +110,11 @@ def main():
         default=False, action='store_true')
     parser.add_option('--list-boards',
         default=False, action='store_true')
-    parser.add_option('--board')
+    parser.add_option('--board',
+        help='Arduino board tag, see --list-boards')
+    parser.add_option('--port',
+        help='the serial port for uploading (e.g. /dev/ttyUSB0)')
+
 
     options, args = parser.parse_args()
 
@@ -136,6 +140,9 @@ def main():
     if options.board and conf['board_tag'] != options.board:
         conf['board_tag'] = options.board
         options.clean = True
+
+    if options.port:
+        conf['arduino_port'] = options.port
 
     init_env(conf)
 
