@@ -9,9 +9,7 @@ Usage
 
 `arduino-sketch my.ino` will compile the `my.ino` file. It remembers the name of your sketch, so you can just call `arduino-sketch` the next time. 
 
-
-
-
+See `arduino-sketch --help` for more info.
 
 
 Configuration
@@ -27,7 +25,7 @@ Configuration
 
 `arduino_port`:
     The Arduino serial device.
-    Defaults to `/dev/cu.usb*`, but this will only work if you have a single USB serial device attached.
+    Defaults to `/dev/ttyUSB*`, but this will only work if you have a single USB serial device attached.
 
 `board_tag`:
     The name/type of the Arduino. See `--list-boards` and `--board` options.
@@ -38,10 +36,14 @@ Install
 
 arduino-sketch is [registered at the Python Package Index (PyPi)](http://pypi.python.org/pypi/arduino-sketch), so you can install it with `pip` or `easy_install`.
 
+You will still need the core components of *Arduino 1.0 or higher*. Note that `arduino-core` on Debian 6.0 is <1.0. [See here on how to install a package from Debian testing.](
+http://serverfault.com/questions/22414/how-can-i-run-debian-stable-but-install-some-packages-from-testing)
+
 For example on Debian:
 
-    sudo aptitude install python-pip
+    sudo aptitude install arduino-core python-pip libyaml-perl
     sudo pip install arduino-sketch
+
 
 To uninstall:
 
