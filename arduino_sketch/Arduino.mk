@@ -199,7 +199,15 @@ VARIANT = $(shell $(PARSE_BOARD) $(BOARD_TAG) build.variant)
 endif
 
 ifndef ARDUINO_VERSION
-ARDUINO_VERSION = 100
+ARDUINO_VERSION = 103
+endif
+
+ifndef USB_VID
+USB_VID = 0x2341
+endif
+
+ifndef USB_PID
+USB_PID = 0x8036
 endif
 
 
@@ -323,6 +331,7 @@ LIB_OBJS      = $(patsubst $(ARDUINO_LIB_PATH)/%.cpp,$(OBJDIR)/libs/%.o,$(LIB_SR
 
 CPPFLAGS      = -mmcu=$(MCU) -DF_CPU=$(F_CPU) \
 			-DARDUINO=$(ARDUINO_VERSION) \
+			-DUSB_VID=$(USB_VID) -DUSB_PID=$(USB_PID)\
 			-I. -I$(ARDUINO_CORE_PATH) -I$(ARDUINO_VARIANT_PATH)\
 			$(SYS_INCLUDES) $(USER_INCLUDES) -g -Os -w -Wall \
 			-ffunction-sections -fdata-sections
