@@ -20,6 +20,7 @@
 
 from __future__ import with_statement
 import os
+import time
 import sys
 from glob import glob
 import optparse
@@ -64,7 +65,7 @@ class SketchConf(dict):
         for k, v in user_defaults.iteritems():
             if k not in self:
                 self[k] = DefaultValue(v)
-        
+
         for platform in [sys.platform, 'other']:
             app_default_file = os.path.join(os.path.dirname(__file__), 'defaults_%s.ini' % platform)
             if os.path.exists(app_default_file):
@@ -88,9 +89,22 @@ def list_boards(conf):
 
 def build(conf, upload=False):
     cmd = ['make', '-f', MAKEFILE, 'all']
-    if upload:
-        cmd.append('upload')
     subprocess.call(cmd)
+    if upload:
+        if conf['board_tag'] == 'leonardo':
+            reset_port(conf)
+            time.sleep(2)
+        cmd = ['make', '-f', MAKEFILE, 'upload']
+        subprocess.call(cmd)
+
+def reset_port(conf):
+    reset_cmd = os.path.join(os.environ['OBJDIR'], 'leonardo_reset')
+    cmd = ['gcc', '-o', reset_cmd,
+        os.path.join(os.path.dirname(__file__), 'reset.c')]
+    subprocess.call(cmd)
+    arduino_port = glob(conf['arduino_port'])[0]
+    print 'resetting leonardo', arduino_port
+    subprocess.call([reset_cmd, arduino_port])
 
 def clean(conf):
     cmd = ['make', '-f', MAKEFILE, 'clean']
