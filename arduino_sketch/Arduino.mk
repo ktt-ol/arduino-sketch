@@ -318,16 +318,23 @@ CAT     = cat
 ECHO    = echo
 
 # General arguments
-SYS_LIBS      = $(patsubst %,$(ARDUINO_LIB_PATH)/%,$(ARDUINO_LIBS))
-USR_LIBS      = $(patsubst %,$(USER_LIB_PATH)/%,$(USER_LIBS))
+SYS_LIBS      = $(patsubst %,$(ARDUINO_LIB_PATH)/%,$(ARDUINO_LIBS)) \
+		$(patsubst %,$(ARDUINO_LIB_PATH)/%/utility,$(ARDUINO_LIBS))
+USR_LIBS      = $(patsubst %,$(USER_LIB_PATH)/%,$(USER_LIBS)) \
+		$(patsubst %,$(USER_LIB_PATH)/%/utility,$(USER_LIBS))
 SYS_INCLUDES  = $(patsubst %,-I%,$(SYS_LIBS))
 USER_INCLUDES = $(patsubst %,-I%,$(USR_LIBS))
 SYS_OBJS      = $(wildcard $(patsubst %,%/*.o,$(SYS_LIBS)))
-LIB_SRC       = $(wildcard $(patsubst %,%/*.cpp,$(SYS_LIBS)))
+LIB_SRC       = $(wildcard $(patsubst %,%/*.cpp,$(SYS_LIBS))) \
+		$(wildcard $(patsubst %,%/*.c,$(SYS_LIBS)))
 USR_OBJS      = $(wildcard $(patsubst %,%/*.o,$(USR_LIBS)))
-USR_SRC       = $(wildcard $(patsubst %,%/*.cpp,$(USR_LIBS)))
+USR_SRC       = $(wildcard $(patsubst %,%/*.cpp,$(USR_LIBS))) \
+		$(wildcard $(patsubst %,%/*.c,$(USR_LIBS)))
 
-LIB_OBJS      = $(patsubst $(ARDUINO_LIB_PATH)/%.cpp,$(OBJDIR)/libs/%.o,$(LIB_SRC)) $(patsubst $(USER_LIB_PATH)/%.cpp,$(OBJDIR)/libs/%.o,$(USR_SRC))
+LIB_OBJS_SRC  = $(patsubst $(ARDUINO_LIB_PATH)/%,$(OBJDIR)/libs/%,$(LIB_SRC)) \
+		$(patsubst $(USER_LIB_PATH)/%,$(OBJDIR)/libs/%,$(USR_SRC))
+LIB_OBJS      = $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(LIB_OBJS_SRC)))
+
 
 CPPFLAGS      = -mmcu=$(MCU) -DF_CPU=$(F_CPU) \
 			-DARDUINO=$(ARDUINO_VERSION) \
@@ -357,12 +364,20 @@ ARD_PORT      = $(firstword $(wildcard $(ARDUINO_PORT)))
 # library sources
 $(OBJDIR)/libs/%.o: $(ARDUINO_LIB_PATH)/%.cpp
 	mkdir -p $(dir $@)
-	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
+
+$(OBJDIR)/libs/%.o: $(ARDUINO_LIB_PATH)/%.c
+	mkdir -p $(dir $@)
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 # user library sources
 $(OBJDIR)/libs/%.o: $(USER_LIB_PATH)/%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
+
+$(OBJDIR)/libs/%.o: $(USER_LIB_PATH)/%.c
+	mkdir -p $(dir $@)
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 # normal local sources
 # .o rules are for objects, .d for dependency tracking
