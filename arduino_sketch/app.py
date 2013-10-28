@@ -1,4 +1,4 @@
-# Copyright (c) 2012 Oliver Tonnhofer
+# Copyright (c) 2012,2013 Oliver Tonnhofer
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,8 @@ from glob import glob
 import optparse
 import subprocess
 import ConfigParser
+
+from arduino_sketch.boards import ArduinoBoards
 
 
 MAKEFILE = os.path.join(os.path.dirname(__file__), 'Arduino.mk')
@@ -76,6 +78,8 @@ class SketchConf(dict):
                         self[k] = DefaultValue(v)
                 break
 
+def boards(conf):
+    return ArduinoBoards(os.path.join(conf['arduino_dir'], 'hardware', 'arduino', 'boards.txt'))
 
 def list_sketches():
     for sketch in glob('*.ino'):
@@ -85,7 +89,7 @@ def clean_ino(conf):
     subprocess.call(['make', '-f', MAKEFILE, 'clean_ino'])
 
 def list_boards(conf):
-    subprocess.call(['make', '-f', MAKEFILE, 'show_boards'])
+    boards(conf).list()
 
 def build(conf, upload=False):
     cmd = ['make', '-f', MAKEFILE, 'all']
@@ -115,6 +119,9 @@ def init_env(conf):
         os.environ[k.upper()] = v
     os.environ['OBJDIR'] = os.path.join(os.curdir, 'build-' + conf['board_tag'])
 
+def init_board_env(conf):
+    boards(conf).set_board_environ(conf['board_tag'])
+
 def main():
     parser = optparse.OptionParser()
     parser.add_option('-l', '--list', '--list-sketches',
@@ -140,6 +147,10 @@ def main():
 
     conf = SketchConf.from_ini(LOCAL_CONF_PATH)
 
+    if options.list_boards:
+        list_boards(conf)
+        sys.exit(0)
+
 
     if len(args) == 1:
         sketch = args[0]
@@ -148,6 +159,11 @@ def main():
     else:
         parser.print_help()
         sys.exit(1)
+
+    if not os.path.exists(sketch):
+        print >>sys.stderr, "ERROR: sketch not found %s" % sketch
+        sys.exit(2)
+
 
     if sketch.endswith('.ino'):
         sketch = sketch[:-len('.ino')]
@@ -159,10 +175,8 @@ def main():
         conf['arduino_port'] = options.port
 
     init_env(conf)
+    init_board_env(conf)
 
-    if options.list_boards:
-        list_boards(conf)
-        sys.exit(0)
 
     if options.clean:
         clean(conf)

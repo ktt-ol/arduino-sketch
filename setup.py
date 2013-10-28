@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-import sys, os
 
 version = '0.2'
 
@@ -24,7 +23,7 @@ setup(name='arduino-sketch',
     url='https://github.com/ktt-ol/arduino-sketch',
     license='MIT License',
     packages=find_packages(),
-    include_package_data=True,
+    package_data={'arduino_sketch': ['*.ini', 'reset.c', 'Arduino.mk']},
     zip_safe=False,
     install_requires=[
     ],
