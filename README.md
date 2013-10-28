@@ -41,7 +41,7 @@ http://serverfault.com/questions/22414/how-can-i-run-debian-stable-but-install-s
 
 For example on Debian:
 
-    sudo aptitude install arduino-core python-pip libyaml-perl
+    sudo aptitude install arduino-core python-pip
     sudo pip install arduino-sketch
 
 
@@ -53,4 +53,4 @@ License
 -------
 
 arduino-sketch is licensed under the MIT license.
-It ships with Arduino.mk and ard-parse-boards which are licensed under LGPL 2.1.
+It ships with Arduino.mk which is licensed under LGPL 2.1.
