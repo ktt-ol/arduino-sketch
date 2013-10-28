@@ -161,13 +161,12 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    if not os.path.exists(sketch):
-        print >>sys.stderr, "ERROR: sketch not found %s" % sketch
-        sys.exit(2)
-
-
     if sketch.endswith('.ino'):
         sketch = sketch[:-len('.ino')]
+
+    if not os.path.exists(sketch + '.ino'):
+        print >>sys.stderr, "ERROR: sketch not found %s" % sketch
+        sys.exit(2)
 
     if options.board:
         conf['board_tag'] = options.board
