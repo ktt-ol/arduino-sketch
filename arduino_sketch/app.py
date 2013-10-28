@@ -181,6 +181,7 @@ def main():
 
     if options.clean:
         clean(conf)
+        sys.exit(3)
     elif sketch != conf.get('sketch'):
         # name of sketch changed, remove compiled .ino files
         clean_ino(conf)
