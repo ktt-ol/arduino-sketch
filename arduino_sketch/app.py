@@ -25,6 +25,7 @@ import sys
 from glob import glob
 import optparse
 import subprocess
+import multiprocessing
 import ConfigParser
 
 from arduino_sketch.boards import ArduinoBoards
@@ -92,7 +93,7 @@ def list_boards(conf):
     boards(conf).list()
 
 def build(conf, upload=False):
-    cmd = ['make', '-f', MAKEFILE, 'all']
+    cmd = ['make', '-j%d' % multiprocessing.cpu_count(), '-f', MAKEFILE, 'all']
     subprocess.call(cmd)
     if upload:
         if conf['board_tag'] == 'leonardo':
