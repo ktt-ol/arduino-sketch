@@ -30,6 +30,15 @@ Configuration
 `board_tag`:
     The name/type of the Arduino. See `--list-boards` and `--board` options.
 
+`arduino_libs`:
+    List of official Arduino libraries your sketch uses (e.g. Wire, SPI, EEPROM, LiquidCrystal, etc.).
+
+`user_lib_path`:
+    Path of your libraries folder.
+
+`user_libs`:
+    List of libraries from your libraries folder that your sketch uses.
+
 
 Install
 -------
