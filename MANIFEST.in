@@ -3,6 +3,5 @@ include README.md
 include LICENSE
 
 include arduino_sketch/Arduino.mk
-include arduino_sketch/reset.c
 
 recursive-include arduino_sketch *.ini

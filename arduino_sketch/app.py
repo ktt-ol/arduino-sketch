@@ -29,6 +29,7 @@ import multiprocessing
 import ConfigParser
 
 from arduino_sketch.boards import ArduinoBoards
+from arduino_sketch.reset import reset
 
 
 MAKEFILE = os.path.join(os.path.dirname(__file__), 'Arduino.mk')
@@ -103,13 +104,9 @@ def build(conf, upload=False):
         subprocess.call(cmd)
 
 def reset_port(conf):
-    reset_cmd = os.path.join(os.environ['OBJDIR'], 'leonardo_reset')
-    cmd = ['gcc', '-o', reset_cmd,
-        os.path.join(os.path.dirname(__file__), 'reset.c')]
-    subprocess.call(cmd)
     arduino_port = glob(conf['arduino_port'])[0]
     print 'resetting leonardo', arduino_port
-    subprocess.call([reset_cmd, arduino_port])
+    reset(arduino_port)
 
 def clean(conf):
     cmd = ['make', '-f', MAKEFILE, 'clean']

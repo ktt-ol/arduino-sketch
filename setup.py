@@ -23,7 +23,7 @@ setup(name='arduino-sketch',
     url='https://github.com/ktt-ol/arduino-sketch',
     license='MIT License',
     packages=find_packages(),
-    package_data={'arduino_sketch': ['*.ini', 'reset.c', 'Arduino.mk']},
+    package_data={'arduino_sketch': ['*.ini', 'Arduino.mk']},
     zip_safe=False,
     install_requires=[
     ],
